@@ -1,9 +1,10 @@
 /*
- * Speed_Control.cpp
+ * Speed_Control_with_Proper_Delay.cpp
  *
- * Created: 12/5/2014 2:04:19 PM
+ * Created: 12/5/2014 2:48:19 PM
  *  Author: Vinod Ranganath
  */ 
+
 
 #define F_CPU 1000000UL
 #include <avr/io.h>
@@ -30,14 +31,23 @@ unsigned int read_adc()
 	return(ADCH);
 }
 
+void delay(int n)
+{
+	for(int i=0; i<n; i++)
+	{
+		_delay_ms(1);
+	}
+	
+}
+
 int main(void)
 {
-    DDRB = 0b11111111; //PART B is OUTPUT
+	DDRB = 0b11111111; //PART B is OUTPUT
 	init_adc(); //CALL the adc_init function
 	
 	_delay_ms(500);
 	unsigned int a;
-	unsigned int p;
+	unsigned int q;
 	
 	unsigned int T;
 	unsigned int TON;
@@ -45,16 +55,42 @@ int main(void)
 	
 	while(1)
 	{
-		p = read_adc(); //Read the ADC input from the ADC
-		a = (p/10); //SCALING the total TIME PERIOD
+		q = read_adc(); //Read the ADC input from the ADC
+		a = (q/10); //SCALING the total TIME PERIOD
 		T = 25.5; //TOTAL TIME PERIOD
 		TON = a; //ON TIME based on the analog input
 		TOFF = T-TON; //OFF TIME = Total time - TON
 		
-		PORTB = 0b00001010;
-		_delay_ms(TON);
-		PORTB = 0b00001010;
-		_delay_ms(TOFF);
+		if(a>=0 && a<=6.3)
+		{
+			PORTB = 0b00001010; //Move Forward
+			delay(TON);
+			PORTB = 0b00000000;
+			delay(TOFF);
+		}
+		
+		if(a>=6.4 && a<=12.5)
+		{
+			PORTB = 0b00001001; //Turn Right
+			delay(TON);
+			PORTB = 0b00000000;
+			delay(TOFF);
+		}
+		
+		if(a>=12.6 && a<=18.9)
+		{
+			PORTB = 0b00000110; //Turn Left
+			delay(TON);
+			PORTB = 0b00000000;
+			delay(TOFF);
+		}
+		
+		if(a>=19 && a<=25.5)
+		{
+			PORTB = 0b00000101; //Move back
+			delay(TON);
+			PORTB = 0b00000000;
+			delay(TOFF);
+		}
 	}
-	
 }
